@@ -1,0 +1,33 @@
+[
+  {
+    "id": "wo-001",
+    "tenantId": "tenant-002",
+    "contractorId": "contractor-001",
+    "createdAt": "2024-06-12T10:30:00Z",
+    "scheduledDate": "2024-06-15",
+    "scheduledTime": "14:00",
+    "status": "completed",
+    "priority": "standard",
+    "issueDescription": "Leaking tap in bathroom - requires washer replacement",
+    "resolutionNotes": "Replaced worn washer on bathroom basin tap. Tested flow and confirmed no further leaks.",
+    "estimatedCost": 45.00,
+    "actualCost": 45.00,
+    "chargedToTenant": true
+  },
+  {
+    "id": "wo-002",
+    "tenantId": "tenant-004",
+    "contractorId": "contractor-003",
+    "createdAt": "2024-02-28T09:15:00Z",
+    "scheduledDate": "2024-02-28",
+    "scheduledTime": "15:00",
+    "status": "completed",
+    "priority": "urgent",
+    "issueDescription": "Boiler pressure dropping repeatedly - possible leak in system",
+    "resolutionNotes": "Inspected filling loop and heating system. Adjusted filling loop valves and demonstrated repressurisation to tenant. No leak detected.",
+    "estimatedCost": 85.00,
+    "actualCost": 85.00,
+    "chargedToTenant": true
+  }
+]
+

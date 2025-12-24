@@ -1,0 +1,33 @@
+[
+  {
+    "id": "pm-001",
+    "name": "Rachel Torres",
+    "email": "rachel.torres@riverside-property.co.uk",
+    "phone": "020 7890 1234",
+    "role": "Senior Property Manager",
+    "buildings": ["Riverside Court", "Oakwood House"],
+    "availability": {
+      "monday": "09:00-17:00",
+      "tuesday": "09:00-17:00",
+      "wednesday": "09:00-17:00",
+      "thursday": "09:00-17:00",
+      "friday": "09:00-16:00"
+    }
+  },
+  {
+    "id": "pm-002",
+    "name": "David Okonkwo",
+    "email": "david.okonkwo@riverside-property.co.uk",
+    "phone": "020 7890 5678",
+    "role": "Property Manager",
+    "buildings": ["Parkview Apartments"],
+    "availability": {
+      "monday": "08:00-16:00",
+      "tuesday": "08:00-16:00",
+      "wednesday": "10:00-18:00",
+      "thursday": "10:00-18:00",
+      "friday": "08:00-14:00"
+    }
+  }
+]
+

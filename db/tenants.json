@@ -1,0 +1,71 @@
+[
+  {
+    "id": "tenant-001",
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@email.com",
+    "phone": "07700 900123",
+    "unit": "Flat 12, Riverside Court",
+    "moveInDate": "2022-03-15",
+    "maintenanceHistory": []
+  },
+  {
+    "id": "tenant-002",
+    "name": "James Chen",
+    "email": "james.chen@email.com",
+    "phone": "07700 900456",
+    "unit": "Flat 8, Riverside Court",
+    "moveInDate": "2021-09-01",
+    "maintenanceHistory": [
+      {
+        "id": "task-001",
+        "date": "2024-06-12",
+        "issue": "Leaking tap in bathroom",
+        "status": "resolved",
+        "resolution": "Washer replaced by maintenance team"
+      }
+    ]
+  },
+  {
+    "id": "tenant-003",
+    "name": "Emma Williams",
+    "email": "emma.williams@email.com",
+    "phone": "07700 900789",
+    "unit": "Flat 3, Oakwood House",
+    "moveInDate": "2023-01-10",
+    "maintenanceHistory": []
+  },
+  {
+    "id": "tenant-004",
+    "name": "Michael Brown",
+    "email": "m.brown@email.com",
+    "phone": "07700 900321",
+    "unit": "Flat 22, Parkview Apartments",
+    "moveInDate": "2020-11-20",
+    "maintenanceHistory": [
+      {
+        "id": "task-002",
+        "date": "2024-02-28",
+        "issue": "Boiler pressure dropping",
+        "status": "resolved",
+        "resolution": "Filling loop adjusted, tenant shown how to repressurise"
+      },
+      {
+        "id": "task-003",
+        "date": "2024-08-15",
+        "issue": "Window not closing properly",
+        "status": "resolved",
+        "resolution": "Hinges realigned"
+      }
+    ]
+  },
+  {
+    "id": "tenant-005",
+    "name": "Priya Patel",
+    "email": "priya.patel@email.com",
+    "phone": "07700 900654",
+    "unit": "Flat 7, Oakwood House",
+    "moveInDate": "2023-06-01",
+    "maintenanceHistory": []
+  }
+]
+

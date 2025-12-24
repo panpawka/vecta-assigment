@@ -1,0 +1,103 @@
+[
+  {
+    "id": "contractor-001",
+    "name": "AquaFix Plumbing Ltd",
+    "service": "plumbing",
+    "phone": "020 7123 4567",
+    "email": "dispatch@aquafix.co.uk",
+    "hourlyRate": 65,
+    "calloutFee": 85,
+    "availability": {
+      "monday": ["09:00", "11:00", "14:00", "16:00"],
+      "tuesday": ["09:00", "11:00", "14:00"],
+      "wednesday": ["09:00", "11:00", "14:00", "16:00"],
+      "thursday": ["11:00", "14:00", "16:00"],
+      "friday": ["09:00", "11:00", "14:00"],
+      "saturday": [],
+      "sunday": []
+    },
+    "emergencyAvailable": true,
+    "emergencyRate": 120
+  },
+  {
+    "id": "contractor-002",
+    "name": "PowerPro Electrical Services",
+    "service": "electrical",
+    "phone": "020 7234 5678",
+    "email": "jobs@powerpro.co.uk",
+    "hourlyRate": 75,
+    "calloutFee": 95,
+    "availability": {
+      "monday": ["08:00", "10:00", "13:00", "15:00"],
+      "tuesday": ["08:00", "10:00", "13:00", "15:00"],
+      "wednesday": ["10:00", "13:00"],
+      "thursday": ["08:00", "10:00", "13:00", "15:00"],
+      "friday": ["08:00", "10:00", "13:00"],
+      "saturday": ["09:00", "11:00"],
+      "sunday": []
+    },
+    "emergencyAvailable": true,
+    "emergencyRate": 145
+  },
+  {
+    "id": "contractor-003",
+    "name": "GasSafe Emergency Services",
+    "service": "gas",
+    "phone": "020 7345 6789",
+    "email": "emergency@gassafe-services.co.uk",
+    "hourlyRate": 85,
+    "calloutFee": 110,
+    "availability": {
+      "monday": ["09:00", "12:00", "15:00"],
+      "tuesday": ["09:00", "12:00", "15:00"],
+      "wednesday": ["09:00", "12:00", "15:00"],
+      "thursday": ["09:00", "12:00", "15:00"],
+      "friday": ["09:00", "12:00"],
+      "saturday": [],
+      "sunday": []
+    },
+    "emergencyAvailable": true,
+    "emergencyRate": 165
+  },
+  {
+    "id": "contractor-004",
+    "name": "BuildRight General Maintenance",
+    "service": "general",
+    "phone": "020 7456 7890",
+    "email": "bookings@buildright.co.uk",
+    "hourlyRate": 55,
+    "calloutFee": 65,
+    "availability": {
+      "monday": ["08:00", "10:00", "12:00", "14:00", "16:00"],
+      "tuesday": ["08:00", "10:00", "12:00", "14:00", "16:00"],
+      "wednesday": ["08:00", "10:00", "12:00", "14:00", "16:00"],
+      "thursday": ["08:00", "10:00", "12:00", "14:00", "16:00"],
+      "friday": ["08:00", "10:00", "12:00", "14:00"],
+      "saturday": ["09:00", "11:00", "13:00"],
+      "sunday": []
+    },
+    "emergencyAvailable": false,
+    "emergencyRate": null
+  },
+  {
+    "id": "contractor-005",
+    "name": "LockMaster Security",
+    "service": "locksmith",
+    "phone": "020 7567 8901",
+    "email": "callout@lockmaster.co.uk",
+    "hourlyRate": 70,
+    "calloutFee": 75,
+    "availability": {
+      "monday": ["09:00", "11:00", "14:00", "16:00"],
+      "tuesday": ["09:00", "11:00", "14:00", "16:00"],
+      "wednesday": ["09:00", "11:00", "14:00", "16:00"],
+      "thursday": ["09:00", "11:00", "14:00", "16:00"],
+      "friday": ["09:00", "11:00", "14:00", "16:00"],
+      "saturday": ["10:00", "12:00", "14:00"],
+      "sunday": ["10:00", "12:00"]
+    },
+    "emergencyAvailable": true,
+    "emergencyRate": 125
+  }
+]
+
