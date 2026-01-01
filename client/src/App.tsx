@@ -40,10 +40,6 @@ interface Message {
   content: string;
   timestamp: Date;
   workOrder?: WorkOrder;
-  charge?: {
-    amount: number;
-    description: string;
-  };
 }
 
 // ==================== SAMPLE MESSAGES ====================
@@ -202,7 +198,7 @@ function App() {
         </div>
 
         <div className="sidebar-footer">
-          <p>Build your agent to handle these messages, create work orders, and charge tenant accounts.</p>
+          <p>Build your agent to handle these messages and create work orders.</p>
         </div>
       </aside>
 
@@ -265,17 +261,6 @@ function App() {
                       </div>
                     )}
 
-                    {/* Charge Card */}
-                    {message.charge && (
-                      <div className="charge-card">
-                        <div className="charge-header">
-                          <span className="charge-icon">💷</span>
-                          <span>Account Charged</span>
-                        </div>
-                        <div className="charge-amount">£{message.charge.amount.toFixed(2)}</div>
-                        <div className="charge-description">{message.charge.description}</div>
-                      </div>
-                    )}
                   </div>
                 </>
               )}
