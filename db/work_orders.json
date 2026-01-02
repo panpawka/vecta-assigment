@@ -72,5 +72,38 @@
     "priority": "Emergency",
     "status": "assigned",
     "created_at": "2026-01-02T17:46:55.376Z"
+  },
+  {
+    "id": "wo-1767378228761",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Locked out of Flat 12, Riverside Court with medication inside",
+    "contractor_id": "contractor-005",
+    "contractor_name": "LockMaster Security",
+    "trade": "locksmith",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T18:23:48.761Z"
+  },
+  {
+    "id": "wo-1767378251008",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Locked out and medication is inside.",
+    "contractor_id": "contractor-005",
+    "contractor_name": "LockMaster Security",
+    "trade": "locksmith",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T18:24:11.008Z"
+  },
+  {
+    "id": "wo-1767379015827",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Tenant locked out with medication inside",
+    "contractor_id": "contractor-005",
+    "contractor_name": "LockMaster Security",
+    "trade": "locksmith",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T18:36:55.827Z"
   }
 ]

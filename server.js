@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { readJSON } from "./server/db.js";
+import { readJSON, writeJSON } from "./server/db.js";
 import { chatHandler } from "./server/agent/chat.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,79 @@ app.get("/api/tenants/:id", (req, res) => {
     return res.status(404).json({ error: "Tenant not found" });
   }
   res.json(tenant);
+});
+
+// GET /api/work-orders/:tenantId - Get all work orders for a tenant
+app.get("/api/work-orders/:tenantId", (req, res) => {
+  const workOrders = readJSON("work_orders.json") || [];
+  const tenantId = req.params.tenantId;
+
+  // Filter work orders for this tenant (handle both camelCase and snake_case)
+  const tenantOrders = workOrders.filter(
+    (wo) => wo.tenant_id === tenantId || wo.tenantId === tenantId
+  );
+
+  // Normalize the response to use consistent field names
+  const normalizedOrders = tenantOrders.map((wo) => ({
+    id: wo.id,
+    tenant_id: wo.tenant_id || wo.tenantId,
+    issue_summary: wo.issue_summary || wo.issueDescription,
+    contractor_id: wo.contractor_id || wo.contractorId,
+    contractor_name: wo.contractor_name || null,
+    trade: wo.trade || null,
+    priority: wo.priority,
+    status: wo.status,
+    created_at: wo.created_at || wo.createdAt,
+    scheduled_date: wo.scheduledDate || null,
+    scheduled_time: wo.scheduledTime || null,
+  }));
+
+  res.json(normalizedOrders);
+});
+
+// PATCH /api/work-orders/:id - Update work order status
+app.patch("/api/work-orders/:id", (req, res) => {
+  const workOrders = readJSON("work_orders.json") || [];
+  const workOrderId = req.params.id;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ error: "Status is required" });
+  }
+
+  const validStatuses = [
+    "assigned",
+    "pending",
+    "in_progress",
+    "completed",
+    "solved",
+  ];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+    });
+  }
+
+  const orderIndex = workOrders.findIndex((wo) => wo.id === workOrderId);
+  if (orderIndex === -1) {
+    return res.status(404).json({ error: "Work order not found" });
+  }
+
+  // Update the status
+  workOrders[orderIndex].status = status;
+  workOrders[orderIndex].updated_at = new Date().toISOString();
+
+  // If marking as solved, add resolution timestamp
+  if (status === "solved" || status === "completed") {
+    workOrders[orderIndex].resolved_at = new Date().toISOString();
+  }
+
+  const success = writeJSON("work_orders.json", workOrders);
+  if (!success) {
+    return res.status(500).json({ error: "Failed to update work order" });
+  }
+
+  res.json(workOrders[orderIndex]);
 });
 
 // Health check

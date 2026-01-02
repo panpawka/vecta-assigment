@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -22,6 +22,7 @@ import { SourcesList } from "./components/SourcesList";
 import { AgentActions } from "./components/AgentActions";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { cn } from "@/lib/utils";
+import { Trash2Icon, CheckCircleIcon, ClipboardListIcon } from "lucide-react";
 
 // ==================== TYPES ====================
 
@@ -51,6 +52,64 @@ interface ChatMessage {
   toolCalls?: any[];
 }
 
+interface WorkOrder {
+  id: string;
+  tenant_id: string;
+  issue_summary: string;
+  contractor_id: string;
+  contractor_name: string | null;
+  trade: string | null;
+  priority: string;
+  status: string;
+  created_at: string;
+  scheduled_date: string | null;
+  scheduled_time: string | null;
+}
+
+// Serializable version for sessionStorage
+interface SerializedChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content: string;
+  timestamp: string;
+  workOrder?: any;
+  sources?: any[];
+  toolCalls?: any[];
+}
+
+// ==================== SESSION STORAGE HELPERS ====================
+
+const getStorageKey = (tenantId: string) => `maintenance-chat-${tenantId}`;
+
+const saveMessagesToSession = (tenantId: string, messages: ChatMessage[]) => {
+  if (!tenantId) return;
+  const serialized: SerializedChatMessage[] = messages.map((m) => ({
+    ...m,
+    timestamp: m.timestamp.toISOString(),
+  }));
+  sessionStorage.setItem(getStorageKey(tenantId), JSON.stringify(serialized));
+};
+
+const loadMessagesFromSession = (tenantId: string): ChatMessage[] | null => {
+  if (!tenantId) return null;
+  const stored = sessionStorage.getItem(getStorageKey(tenantId));
+  if (!stored) return null;
+  try {
+    const parsed: SerializedChatMessage[] = JSON.parse(stored);
+    return parsed.map((m) => ({
+      ...m,
+      timestamp: new Date(m.timestamp),
+    }));
+  } catch {
+    return null;
+  }
+};
+
+const clearMessagesFromSession = (tenantId: string) => {
+  if (!tenantId) return;
+  sessionStorage.removeItem(getStorageKey(tenantId));
+};
+
 // ==================== SAMPLE MESSAGES ====================
 
 const SAMPLE_ISSUES = [
@@ -64,6 +123,94 @@ const SAMPLE_ISSUES = [
   "There's a crack appearing in my wall that's getting bigger",
 ];
 
+// ==================== ACTIVE WORK ORDERS COMPONENT ====================
+
+interface ActiveWorkOrdersProps {
+  workOrders: WorkOrder[];
+  onMarkAsSolved: (orderId: string) => void;
+  isLoading: boolean;
+}
+
+const ActiveWorkOrders = ({
+  workOrders,
+  onMarkAsSolved,
+  isLoading,
+}: ActiveWorkOrdersProps) => {
+  // Filter to show only active orders (assigned, pending, in_progress)
+  const activeOrders = workOrders.filter(
+    (wo) =>
+      wo.status === "assigned" ||
+      wo.status === "pending" ||
+      wo.status === "in_progress"
+  );
+
+  if (isLoading) {
+    return (
+      <div className="active-work-orders">
+        <label>
+          <ClipboardListIcon className="inline-block w-3 h-3 mr-1" />
+          Active Work Orders
+        </label>
+        <div className="text-xs text-sidebar-text-muted p-2">Loading...</div>
+      </div>
+    );
+  }
+
+  if (activeOrders.length === 0) {
+    return (
+      <div className="active-work-orders">
+        <label>
+          <ClipboardListIcon className="inline-block w-3 h-3 mr-1" />
+          Active Work Orders
+        </label>
+        <div className="text-xs text-sidebar-text-muted p-2">
+          No active work orders
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="active-work-orders">
+      <label>
+        <ClipboardListIcon className="inline-block w-3 h-3 mr-1" />
+        Active Work Orders ({activeOrders.length})
+      </label>
+      <div className="work-orders-list">
+        {activeOrders.map((order) => (
+          <div
+            key={order.id}
+            className="work-order-item">
+            <div className="work-order-info">
+              <div className="work-order-id">{order.id}</div>
+              <div className="work-order-summary">
+                {order.issue_summary?.substring(0, 50)}
+                {order.issue_summary && order.issue_summary.length > 50
+                  ? "..."
+                  : ""}
+              </div>
+              <div className="work-order-meta">
+                <span className={`status-badge status-${order.status}`}>
+                  {order.status}
+                </span>
+                {order.trade && (
+                  <span className="trade-badge">{order.trade}</span>
+                )}
+              </div>
+            </div>
+            <button
+              className="solve-button"
+              onClick={() => onMarkAsSolved(order.id)}
+              title="Mark as Solved">
+              <CheckCircleIcon className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ==================== COMPONENT ====================
 
 function App() {
@@ -72,6 +219,42 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [isLoadingWorkOrders, setIsLoadingWorkOrders] = useState(false);
+
+  // Create welcome messages for a tenant
+  const createWelcomeMessages = useCallback((tenant: Tenant): ChatMessage[] => {
+    return [
+      {
+        id: "welcome",
+        role: "system",
+        content: `Chat started for ${tenant.name} (${tenant.unit})`,
+        timestamp: new Date(),
+      },
+      {
+        id: "greeting",
+        role: "assistant",
+        content: `Hello! I'm the Maintenance Support Agent. How can I help you today?\n\nYou can describe any maintenance issue you're experiencing, and I'll try to help resolve it or arrange for a contractor if needed.`,
+        timestamp: new Date(),
+      },
+    ];
+  }, []);
+
+  // Fetch work orders for tenant
+  const fetchWorkOrders = useCallback(async (tenantId: string) => {
+    if (!tenantId) return;
+    setIsLoadingWorkOrders(true);
+    try {
+      const response = await fetch(`/api/work-orders/${tenantId}`);
+      const data = await response.json();
+      setWorkOrders(data);
+    } catch (error) {
+      console.error("Error fetching work orders:", error);
+      setWorkOrders([]);
+    } finally {
+      setIsLoadingWorkOrders(false);
+    }
+  }, []);
 
   // Fetch tenants on mount
   useEffect(() => {
@@ -86,30 +269,58 @@ function App() {
       .catch(console.error);
   }, []);
 
-  // Add welcome message when tenant changes
+  // Load messages from session or create welcome messages when tenant changes
   useEffect(() => {
     if (selectedTenantId) {
       const tenant = tenants.find((t) => t.id === selectedTenantId);
       if (tenant) {
-        setMessages([
-          {
-            id: "welcome",
-            role: "system",
-            content: `Chat started for ${tenant.name} (${tenant.unit})`,
-            timestamp: new Date(),
-          },
-          {
-            id: "greeting",
-            role: "assistant",
-            content: `Hello! I'm the Maintenance Support Agent. How can I help you today?\n\nYou can describe any maintenance issue you're experiencing, and I'll try to help resolve it or arrange for a contractor if needed.`,
-            timestamp: new Date(),
-          },
-        ]);
+        // Try to load from session storage first
+        const storedMessages = loadMessagesFromSession(selectedTenantId);
+        if (storedMessages && storedMessages.length > 0) {
+          setMessages(storedMessages);
+        } else {
+          // Create fresh welcome messages
+          setMessages(createWelcomeMessages(tenant));
+        }
+        // Fetch work orders for this tenant
+        fetchWorkOrders(selectedTenantId);
       }
     }
-  }, [selectedTenantId, tenants]);
+  }, [selectedTenantId, tenants, createWelcomeMessages, fetchWorkOrders]);
+
+  // Save messages to session storage whenever they change
+  useEffect(() => {
+    if (selectedTenantId && messages.length > 0) {
+      saveMessagesToSession(selectedTenantId, messages);
+    }
+  }, [messages, selectedTenantId]);
 
   const selectedTenant = tenants.find((t) => t.id === selectedTenantId);
+
+  const handleClearHistory = () => {
+    if (!selectedTenantId || !selectedTenant) return;
+    clearMessagesFromSession(selectedTenantId);
+    setMessages(createWelcomeMessages(selectedTenant));
+  };
+
+  const handleMarkAsSolved = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/work-orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "solved" }),
+      });
+
+      if (response.ok) {
+        // Refresh work orders
+        fetchWorkOrders(selectedTenantId);
+      } else {
+        console.error("Failed to update work order");
+      }
+    } catch (error) {
+      console.error("Error updating work order:", error);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isProcessing) return;
@@ -154,6 +365,8 @@ function App() {
           const content = JSON.parse(result.content);
           if (result.name === "create_work_order") {
             workOrder = content;
+            // Refresh work orders after creation
+            fetchWorkOrders(selectedTenantId);
           } else if (result.name === "search_knowledge_base") {
             sources = content;
           }
@@ -221,7 +434,20 @@ function App() {
               <p className="tenant-email">{selectedTenant.email}</p>
             </div>
           )}
+          <button
+            className="clear-chat-button"
+            onClick={handleClearHistory}>
+            <Trash2Icon className="w-3 h-3" />
+            Clear Chat History
+          </button>
         </div>
+
+        {/* Active Work Orders */}
+        <ActiveWorkOrders
+          workOrders={workOrders}
+          onMarkAsSolved={handleMarkAsSolved}
+          isLoading={isLoadingWorkOrders}
+        />
 
         <div className="sample-issues">
           <label>Sample Issues</label>
@@ -260,19 +486,21 @@ function App() {
                 );
               }
 
+              const isUser = message.role === "user";
+
               // User and assistant messages
               return (
                 <Message
                   key={message.id}
-                  from={message.role === "user" ? "user" : "assistant"}>
+                  from={isUser ? "user" : "assistant"}>
                   {/* Message header with sender name and time */}
                   <div
                     className={cn(
                       "flex items-center gap-2 text-xs text-muted-foreground mb-1",
-                      message.role === "user" && "justify-end"
+                      isUser && "justify-end"
                     )}>
                     <span className="font-medium text-foreground">
-                      {message.role === "user"
+                      {isUser
                         ? selectedTenant?.name || "Tenant"
                         : "Maintenance Agent"}
                     </span>
@@ -284,7 +512,11 @@ function App() {
                     </span>
                   </div>
 
-                  <MessageContent>
+                  <MessageContent
+                    className={cn(
+                      !isUser &&
+                        "bg-muted/50 rounded-lg px-4 py-3 group-[.is-assistant]:text-foreground"
+                    )}>
                     {/* Sources - shown before content for assistant */}
                     {message.sources && message.sources.length > 0 && (
                       <SourcesList sources={message.sources} />
@@ -293,13 +525,15 @@ function App() {
                     {/* Main message text */}
                     <MessageResponse>{message.content}</MessageResponse>
 
-                    {/* Tool calls display */}
-                    {message.toolCalls && message.toolCalls.length > 0 && (
-                      <AgentActions toolCalls={message.toolCalls} />
-                    )}
+                    {/* Tool calls display - DEV ONLY */}
+                    {import.meta.env.DEV &&
+                      message.toolCalls &&
+                      message.toolCalls.length > 0 && (
+                        <AgentActions toolCalls={message.toolCalls} />
+                      )}
 
                     {/* Work order card */}
-                    {message.workOrder && (
+                    {message.workOrder && !message.workOrder.duplicate && (
                       <WorkOrderCard workOrder={message.workOrder} />
                     )}
                   </MessageContent>
@@ -315,7 +549,7 @@ function App() {
                     Maintenance Agent
                   </span>
                 </div>
-                <MessageContent>
+                <MessageContent className="bg-muted/50 rounded-lg px-4 py-3">
                   <Shimmer className="text-sm">Thinking...</Shimmer>
                 </MessageContent>
               </Message>

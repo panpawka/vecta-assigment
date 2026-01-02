@@ -51,7 +51,7 @@ export const tools = {
       function: {
         name: "create_work_order",
         description:
-          "Create a new work order to dispatch a contractor. You must call get_available_contractors first to get the contractor ID.",
+          "Create a new work order to dispatch a contractor. You must call get_available_contractors first to get the contractor ID. This will check for existing pending orders to prevent duplicates.",
         parameters: {
           type: "object",
           properties: {
@@ -128,11 +128,55 @@ export const toolImplementations = {
       );
     }
 
+    // Check for existing pending/assigned work orders for this tenant with same trade
+    const existingOrder = workOrders.find((wo) => {
+      const woTenantId = wo.tenant_id || wo.tenantId;
+      const woStatus = wo.status;
+      const woTrade =
+        wo.trade ||
+        getTradeFromContractor(
+          wo.contractor_id || wo.contractorId,
+          contractors
+        );
+
+      // Check if same tenant, pending/assigned status, and same trade
+      return (
+        woTenantId === tenant_id &&
+        (woStatus === "assigned" ||
+          woStatus === "pending" ||
+          woStatus === "in_progress") &&
+        woTrade === contractor.service
+      );
+    });
+
+    if (existingOrder) {
+      // Return existing order info instead of creating duplicate
+      return {
+        duplicate: true,
+        existing_order: {
+          id: existingOrder.id,
+          issue_summary:
+            existingOrder.issue_summary || existingOrder.issueDescription,
+          contractor_name:
+            existingOrder.contractor_name ||
+            getContractorName(
+              existingOrder.contractor_id || existingOrder.contractorId,
+              contractors
+            ),
+          trade: existingOrder.trade || contractor.service,
+          priority: existingOrder.priority,
+          status: existingOrder.status,
+          created_at: existingOrder.created_at || existingOrder.createdAt,
+        },
+        message: `A work order for ${contractor.service} is already in progress for this tenant. Work Order ID: ${existingOrder.id}. Please resolve the existing order before creating a new one, or ask the tenant if they want to update the existing order.`,
+      };
+    }
+
     const newOrder = {
       id: `wo-${Date.now()}`,
       tenant_id,
       issue_summary,
-      contractor_id: contractor.id, // Always use the actual ID
+      contractor_id: contractor.id,
       contractor_name: contractor.name,
       trade: contractor.service,
       priority,
@@ -146,3 +190,15 @@ export const toolImplementations = {
     return newOrder;
   },
 };
+
+// Helper function to get trade from contractor ID
+function getTradeFromContractor(contractorId, contractors) {
+  const contractor = contractors.find((c) => c.id === contractorId);
+  return contractor ? contractor.service : null;
+}
+
+// Helper function to get contractor name from ID
+function getContractorName(contractorId, contractors) {
+  const contractor = contractors.find((c) => c.id === contractorId);
+  return contractor ? contractor.name : null;
+}
