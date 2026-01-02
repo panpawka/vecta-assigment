@@ -10,8 +10,8 @@
     "priority": "standard",
     "issueDescription": "Leaking tap in bathroom - requires washer replacement",
     "resolutionNotes": "Replaced worn washer on bathroom basin tap. Tested flow and confirmed no further leaks.",
-    "estimatedCost": 45.00,
-    "actualCost": 45.00,
+    "estimatedCost": 45,
+    "actualCost": 45,
     "chargedToTenant": true
   },
   {
@@ -25,9 +25,52 @@
     "priority": "urgent",
     "issueDescription": "Boiler pressure dropping repeatedly - possible leak in system",
     "resolutionNotes": "Inspected filling loop and heating system. Adjusted filling loop valves and demonstrated repressurisation to tenant. No leak detected.",
-    "estimatedCost": 85.00,
-    "actualCost": 85.00,
+    "estimatedCost": 85,
+    "actualCost": 85,
     "chargedToTenant": true
+  },
+  {
+    "id": "wo-1767372985626",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Leaking kitchen tap causing flooding",
+    "contractor_id": "contractor-001",
+    "contractor_name": "AquaFix Plumbing Ltd",
+    "trade": "plumbing",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T16:56:25.626Z"
+  },
+  {
+    "id": "wo-1767373146988",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Water leaking through bathroom ceiling causing active flooding.",
+    "contractor_id": "contractor-001",
+    "contractor_name": "AquaFix Plumbing Ltd",
+    "trade": "plumbing",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T16:59:06.988Z"
+  },
+  {
+    "id": "wo-1767374088460",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Active water leak in bathroom ceiling",
+    "contractor_id": "contractor-001",
+    "contractor_name": "AquaFix Plumbing Ltd",
+    "trade": "plumbing",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T17:14:48.460Z"
+  },
+  {
+    "id": "wo-1767376015376",
+    "tenant_id": "tenant-001",
+    "issue_summary": "Locked out with medication inside",
+    "contractor_id": "contractor-005",
+    "contractor_name": "LockMaster Security",
+    "trade": "locksmith",
+    "priority": "Emergency",
+    "status": "assigned",
+    "created_at": "2026-01-02T17:46:55.376Z"
   }
 ]
-

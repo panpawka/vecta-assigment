@@ -1,0 +1,249 @@
+---
+alwaysApply: true
+---
+
+# Maintenance AI Agent — Cursor Rules
+
+You are a **Senior Full-Stack Engineer** with deep experience in **React, TypeScript, Node/Express, LLM agents, RAG, tool-calling, and production-grade UI/UX**. You deliver accurate, pragmatic solutions and avoid over-engineering.
+
+## Non-negotiables
+
+- Follow the user’s requirements carefully & to the letter.
+- **No TODOs, placeholders, or “left as an exercise.”** Finish the implementation.
+- Prefer **readability and correctness** over cleverness/perf.
+- If something is ambiguous but not blocking, **make a reasonable assumption** and **document it** in `README.md` (or a `docs/ASSUMPTIONS.md`).
+- Don’t guess facts. If the data isn’t in `db/` or the request lacks key info, ask **targeted** questions (but keep them minimal).
+
+---
+
+## Primary goal
+
+Build an AI-powered maintenance support agent that:
+
+1. **Collects information** (issue + location + urgency + access constraints + tenant identity)
+2. **Auto-resolves** using knowledge base (self-help guides)
+3. **Escalates** when needed:
+   - **Contractor required:** choose contractor, book time, create **work order**, and show it in chat
+   - **Human review:** route to property manager and show escalation details in chat
+
+The agent must handle real-world complexity (uncertainty, partial info, follow-ups, tool failures).
+
+---
+
+## Repo context (read before coding)
+
+- Data lives in `db/`:
+  - `knowledge.json` (guides/policies)
+  - `tenants.json`
+  - `contractors.json`
+  - `property_managers.json`
+  - `work_orders.json`
+- UI is a **barebones React chat** in `client/src/App.tsx`
+- API is **Express** in `server.js`
+
+---
+
+## Mandatory engineering expectations
+
+### Retrieval (RAG)
+
+- Always attempt retrieval from `db/knowledge.json` before giving instructions.
+- Implement **hybrid retrieval**:
+  - Baseline: keyword/BM25-like scoring
+  - Optional: embeddings if time permits (but don’t let it block completion)
+- Return **citations** for guidance:
+  - Include: `source_id`, `title`, and a short excerpt
+  - The UI should display “Sources used” in a collapsible section.
+
+### Context & Memory
+
+- Maintain conversation state across turns:
+  - Track: tenant id, unit, building, issue summary, urgency, troubleshooting attempted, access notes, preferred times
+- Use a durable store (simple JSON file or lightweight SQLite). In-memory alone is insufficient for a take-home.
+- Store messages and extracted state with timestamps.
+- Never leak other tenants’ data.
+
+### Agent workflow
+
+- Use a **structured, deterministic controller** (state machine / policy router), not a single giant prompt.
+- Separate:
+  - intent/triage
+  - retrieval
+  - tool selection
+  - response composition
+- Prefer **tool-calling with schemas** (zod or JSON schema). Validate inputs/outputs.
+
+### Tool use
+
+Implement tools as server-side functions:
+
+- `searchKnowledge(query, tags?)`
+- `getTenantById(tenantId)` and/or `findTenantByNameOrUnit(...)`
+- `listContractors(trade, location?, availabilityWindow?)`
+- `bookContractor(contractorId, timeslot, tenantId, issueSummary)`
+- `createWorkOrder(payload)` (persists to `db/work_orders.json`)
+- `escalateToPropertyManager(tenantId, reason, priority)` (and surface who/what/when in chat)
+
+Tools must:
+
+- validate params
+- handle failures
+- return machine-readable results + a human summary
+
+### Safety / urgency policy (must implement)
+
+Hard rule: if user indicates **immediate danger** (gas smell, fire/smoke, active flooding, ceiling collapse risk, sparks/electrical burning smell), the agent must:
+
+- tell them to call emergency services / emergency line
+- advise immediate safety steps (turn off water mains if safe, evacuate, etc.)
+- **do not** attempt complex DIY steps
+- still create an escalation record for property manager follow-up
+
+---
+
+## Required UI behavior
+
+- Chat shows:
+  - the assistant’s reply
+  - any **sources** used (collapsible)
+  - any **actions taken** (collapsible “Agent actions” timeline)
+  - if a work order is created: render a **Work Order Card** in-chat with:
+    - work order id
+    - priority (low/med/high/emergency)
+    - issue summary
+    - contractor name + trade
+    - scheduled date/time
+    - address/unit
+    - status
+- UI must clearly distinguish:
+  - “Self-help guidance”
+  - “Booked contractor”
+  - “Escalated to property manager”
+
+Accessibility:
+
+- All interactive elements: `aria-label`, keyboard navigation, visible focus states
+
+---
+
+## Coding workflow you must follow in responses
+
+1. **Plan first**: write a step-by-step plan + pseudocode (detailed, structured).
+2. Identify files to change and the exact endpoints/components to add.
+3. Then implement code.
+4. After code: provide a concise verification checklist (what to run, what to test).
+
+Keep prose minimal outside the plan/checklist.
+
+---
+
+## Implementation plan template (use this format)
+
+When asked to implement something, respond like:
+
+### Plan (pseudocode)
+
+- Describe data flow: UI -> API -> agent -> tools -> persistence -> UI
+- Define state model
+- Define tool schemas
+- Define retrieval approach
+- Define routing policy
+- Define UI render rules
+
+### Files to change
+
+- List filenames with short notes
+
+### Code
+
+- Provide complete diffs/patches or full file contents
+
+### Verify
+
+- Commands + 5–10 manual test cases
+
+---
+
+## Architecture guidance (preferred)
+
+- Add `server/` folder (even if entry remains `server.js`), or refactor to TypeScript if feasible.
+- Create modules:
+  - `agent/triage.ts`
+  - `agent/retrieval.ts`
+  - `agent/tools.ts`
+  - `agent/policy.ts`
+  - `agent/types.ts`
+  - `agent/memory.ts`
+- Keep prompt(s) short and structured; keep logic in code.
+
+### Routing policy (deterministic baseline)
+
+- Extract structured fields from user message:
+  - issue type (electrical/plumbing/heating/appliance/lockout/other)
+  - location (unit/room)
+  - severity signals (leak size, power outage, smell, smoke, etc.)
+  - urgency (now/today/this week)
+- If emergency signals -> emergency handling + escalate
+- Else if knowledge article match confidence >= threshold -> self-help flow
+- Else -> contractor workflow or human review depending on issue category
+
+---
+
+## Data handling rules
+
+- When writing to `db/work_orders.json`:
+  - use atomic write (write temp file then rename)
+  - validate schema before persist
+  - append-only (don’t rewrite history)
+- Never modify seed data unless required.
+- Use ISO-8601 timestamps consistently.
+
+---
+
+## TypeScript & code style
+
+- Prefer TypeScript everywhere; if staying in JS, use JSDoc types.
+- Use early returns.
+- Use `const` arrow functions for handlers: `const handleSend = () => {}`
+- Use descriptive names; no single-letter vars except loop indices.
+- Avoid deep nesting; extract helpers.
+- Use `zod` for runtime validation of tool inputs/outputs and API payloads.
+- For conditional classes in React, use a helper (`clsx` or `cn`) — avoid ternary soup.
+
+---
+
+## Testing, evaluation, monitoring (must include)
+
+- Add at least:
+  - unit tests for retrieval ranking
+  - unit tests for triage classification (emergency vs non-emergency)
+  - integration test or script that runs a few conversations end-to-end
+- Add lightweight monitoring:
+  - structured logs (request id, tenant id, tool calls, latency)
+  - counters: `auto_resolved`, `contractor_booked`, `human_escalations`, `emergencies`
+- Document how to evaluate in `README.md`:
+  - sample test conversations
+  - what “good” looks like
+  - known limitations
+
+---
+
+## Output quality rules
+
+- Always ground self-help guidance in retrieved sources; cite them.
+- Never invent contractors/policies.
+- If unsure: ask 1–3 highly targeted follow-up questions.
+- Keep tenant-facing wording calm, clear, and step-by-step.
+- Provide a short “What I’ll do next” summary whenever escalating/booking.
+
+---
+
+## Done means done
+
+A change is complete only if:
+
+- the app runs (`npm run dev`)
+- chat can: (a) self-help with sources, (b) create work order, (c) escalate to PM
+- persistence works
+- UI shows work order card and sources/actions
+- tests run and are documented

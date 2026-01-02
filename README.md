@@ -12,22 +12,23 @@ A barebones starting point — a React chat interface and a simple Express API. 
 
 ## What We're Looking For
 
-| Area | What We're Evaluating |
-|------|----------------------|
-| **Information Retrieval** | How do you query and retrieve from knowledge sources (documents, policies, etc.)? |
-| **Context & Memory** | How do you manage conversation context and maintain state across interactions? |
-| **Agent Workflow** | How do you structure the agent's reasoning and decision-making process? |
-| **Tool Use** | How does the agent use tools to take actions and gather information? |
-| **Evaluation & Monitoring** | How do you measure and monitor the agent's performance? |
-| **UI** | How do you show relevant information to the user about the agent or its outputs? |
+| Area                        | What We're Evaluating                                                             |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| **Information Retrieval**   | How do you query and retrieve from knowledge sources (documents, policies, etc.)? |
+| **Context & Memory**        | How do you manage conversation context and maintain state across interactions?    |
+| **Agent Workflow**          | How do you structure the agent's reasoning and decision-making process?           |
+| **Tool Use**                | How does the agent use tools to take actions and gather information?              |
+| **Evaluation & Monitoring** | How do you measure and monitor the agent's performance?                           |
+| **UI**                      | How do you show relevant information to the user about the agent or its outputs?  |
 
 ## The Business Problem
 
 You're building an AI agent for a property management company that handles tenant maintenance requests.
 
 **Tenants message in with issues like:**
+
 - "My smoke alarm won't stop beeping"
-- "There's water coming through my ceiling"  
+- "There's water coming through my ceiling"
 - "I've locked myself out"
 - "The boiler pressure is too low"
 
@@ -41,6 +42,7 @@ Some issues have simple fixes that tenants can do themselves (e.g., resetting a 
 
 **3. Escalate When Needed**
 If the issue can't be self-resolved:
+
 - **Contractor required**: Find an appropriate contractor, book a time slot, and create a work order that is displayed in the chat to the customer
 - **Needs human review**: Some issues require a property manager to get involved — escalate to the right person
 
@@ -68,13 +70,13 @@ Explore the `db/` folder to understand what data is available. The chat interfac
 
 ## Terminology
 
-| Term | Description |
-|------|-------------|
-| **Tenant** | A resident who rents a property unit. They report maintenance issues and interact with the AI agent. |
-| **Property Manager** | The person responsible for overseeing buildings and units. Handles escalations that require human judgment or approval. |
-| **Contractor** | A skilled tradesperson (plumber, electrician, etc.) who can be dispatched to fix maintenance issues that tenants can't resolve themselves. |
-| **Work Order** | A formal request created when a contractor needs to visit. Contains details like the issue, scheduled time, contractor assigned, and priority level. |
-| **Knowledge** | A collection of guides, policies, and troubleshooting articles. Used by the agent to help tenants self-resolve common issues before escalating. |
+| Term                 | Description                                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tenant**           | A resident who rents a property unit. They report maintenance issues and interact with the AI agent.                                                 |
+| **Property Manager** | The person responsible for overseeing buildings and units. Handles escalations that require human judgment or approval.                              |
+| **Contractor**       | A skilled tradesperson (plumber, electrician, etc.) who can be dispatched to fix maintenance issues that tenants can't resolve themselves.           |
+| **Work Order**       | A formal request created when a contractor needs to visit. Contains details like the issue, scheduled time, contractor assigned, and priority level. |
+| **Knowledge**        | A collection of guides, policies, and troubleshooting articles. Used by the agent to help tenants self-resolve common issues before escalating.      |
 
 ## Getting Started
 
@@ -83,13 +85,13 @@ npm run install:all
 npm run dev
 ```
 
-- **API**: http://localhost:3001
+- **API**: http://localhost:3002
 - **Frontend**: http://localhost:5173
 
 ## What You Can Use
 
 - Any AI/LLM provider
-- Any frameworks or libraries  
+- Any frameworks or libraries
 - Extend or replace anything in the codebase
 
 ## Questions?
