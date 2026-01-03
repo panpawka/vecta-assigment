@@ -1,4 +1,4 @@
-import "dotenv/config"; // Load .env file
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { dirname, join } from "path";
@@ -11,24 +11,19 @@ const app = express();
 const PORT = 3001;
 
 app.use(cors());
-// Increase payload limit to handle base64 encoded images
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// GET /api/knowledge - Knowledge base articles
 app.get("/api/knowledge", (req, res) => {
   res.json(readJSON("knowledge.json"));
 });
 
-// POST /api/chat - Chat endpoint
 app.post("/api/chat", chatHandler);
 
-// GET /api/tenants - All tenants
 app.get("/api/tenants", (req, res) => {
   res.json(readJSON("tenants.json"));
 });
 
-// GET /api/tenants/:id - Single tenant
 app.get("/api/tenants/:id", (req, res) => {
   const tenants = readJSON("tenants.json");
   const tenant = tenants.find((t) => t.id === req.params.id);
@@ -38,17 +33,14 @@ app.get("/api/tenants/:id", (req, res) => {
   res.json(tenant);
 });
 
-// GET /api/work-orders/:tenantId - Get all work orders for a tenant
 app.get("/api/work-orders/:tenantId", (req, res) => {
   const workOrders = readJSON("work_orders.json") || [];
   const tenantId = req.params.tenantId;
 
-  // Filter work orders for this tenant (handle both camelCase and snake_case)
   const tenantOrders = workOrders.filter(
     (wo) => wo.tenant_id === tenantId || wo.tenantId === tenantId
   );
 
-  // Normalize the response to use consistent field names
   const normalizedOrders = tenantOrders.map((wo) => ({
     id: wo.id,
     tenant_id: wo.tenant_id || wo.tenantId,
@@ -67,7 +59,6 @@ app.get("/api/work-orders/:tenantId", (req, res) => {
   res.json(normalizedOrders);
 });
 
-// PATCH /api/work-orders/:id - Update work order status
 app.patch("/api/work-orders/:id", (req, res) => {
   const workOrders = readJSON("work_orders.json") || [];
   const workOrderId = req.params.id;
@@ -95,11 +86,9 @@ app.patch("/api/work-orders/:id", (req, res) => {
     return res.status(404).json({ error: "Work order not found" });
   }
 
-  // Update the status
   workOrders[orderIndex].status = status;
   workOrders[orderIndex].updated_at = new Date().toISOString();
 
-  // If marking as solved, add resolution timestamp
   if (status === "solved" || status === "completed") {
     workOrders[orderIndex].resolved_at = new Date().toISOString();
   }
@@ -112,7 +101,6 @@ app.patch("/api/work-orders/:id", (req, res) => {
   res.json(workOrders[orderIndex]);
 });
 
-// Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });

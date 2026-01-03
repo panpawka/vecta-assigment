@@ -1,3 +1,13 @@
+/**
+ * AgentActions Component
+ *
+ * Development tool for visualizing AI agent tool calls and their arguments.
+ * Displays function invocations in an expandable format for debugging purposes.
+ *
+ * Note: This component is only rendered in development mode and is useful for
+ * monitoring agent behavior and troubleshooting tool execution.
+ */
+
 import {
   Tool,
   ToolHeader,
@@ -50,7 +60,6 @@ export const AgentActions = ({ toolCalls }: AgentActionsProps) => {
   );
 };
 
-// Helper to format tool names for display
 function formatToolName(name: string): string {
   return name
     .split("_")

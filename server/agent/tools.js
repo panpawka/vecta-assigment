@@ -6,7 +6,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "mock-key",
 });
 
-// Tool Definitions
 export const tools = {
   search_knowledge_base: {
     definition: {
@@ -71,13 +70,12 @@ export const tools = {
             },
             contractor_id: {
               type: "string",
-              description:
-                "The ID of the contractor to assign (e.g., 'contractor-001', 'contractor-005'). Get this from get_available_contractors.",
+              description: "Contractor ID from get_available_contractors.",
             },
             priority: {
               type: "string",
               enum: ["Low", "Medium", "High", "Emergency"],
-              description: "Priority level of the work order.",
+              description: "Priority level.",
             },
             attachments: {
               type: "array",
@@ -111,8 +109,7 @@ export const tools = {
           properties: {
             tenant_id: {
               type: "string",
-              description:
-                "The ID of the tenant (e.g., 'tenant-001'). This is provided in the chat context.",
+              description: "The tenant ID from chat context.",
             },
             new_issue_description: {
               type: "string",
@@ -246,7 +243,6 @@ export const tools = {
   },
 };
 
-// Tool Implementations
 export const toolImplementations = {
   get_available_contractors: ({ trade }) => {
     const contractors = readJSON("contractors.json");
@@ -261,7 +257,6 @@ export const toolImplementations = {
   check_similar_issues: async ({ tenant_id, new_issue_description }) => {
     const workOrders = readJSON("work_orders.json") || [];
 
-    // Get active work orders for this tenant
     const activeOrders = workOrders.filter((wo) => {
       const woTenantId = wo.tenant_id || wo.tenantId;
       const woStatus = (wo.status || "").toLowerCase();
@@ -272,7 +267,6 @@ export const toolImplementations = {
       return woTenantId === tenant_id && isActiveStatus;
     });
 
-    // If no active orders, no duplicates possible
     if (activeOrders.length === 0) {
       return {
         has_similar: false,
@@ -282,7 +276,6 @@ export const toolImplementations = {
       };
     }
 
-    // Format existing issues for LLM comparison
     const existingIssues = activeOrders.map((wo) => ({
       id: wo.id,
       issue_summary: wo.issue_summary || wo.issueDescription,
@@ -292,7 +285,6 @@ export const toolImplementations = {
       created_at: wo.created_at || wo.createdAt,
     }));
 
-    // Use LLM to compare issues semantically
     try {
       const comparisonResult = await compareIssuesWithLLM(
         new_issue_description,
@@ -321,7 +313,6 @@ export const toolImplementations = {
       };
     } catch (error) {
       console.error("[check_similar_issues] LLM comparison error:", error);
-      // Fallback: return existing orders for manual review
       return {
         has_similar: false,
         error: "Could not perform semantic comparison",
@@ -347,17 +338,14 @@ export const toolImplementations = {
     const workOrders = readJSON("work_orders.json") || [];
     const contractors = readJSON("contractors.json") || [];
 
-    // Try to find contractor by ID first
     let contractor = contractors.find((c) => c.id === contractor_id);
 
-    // If not found by ID, try to find by name (case-insensitive)
     if (!contractor) {
       contractor = contractors.find(
         (c) => c.name.toLowerCase() === contractor_id.toLowerCase()
       );
     }
 
-    // If still not found, try partial name match
     if (!contractor) {
       contractor = contractors.find((c) =>
         c.name.toLowerCase().includes(contractor_id.toLowerCase())
@@ -366,14 +354,11 @@ export const toolImplementations = {
 
     if (!contractor) {
       throw new Error(
-        `Contractor with ID or name "${contractor_id}" not found. Available contractors: ${contractors
+        `Contractor "${contractor_id}" not found. Available: ${contractors
           .map((c) => `${c.id} (${c.name})`)
           .join(", ")}`
       );
     }
-
-    // Note: Duplicate detection is now handled by check_similar_issues tool
-    // which uses LLM-based semantic comparison for better accuracy
 
     const newOrder = {
       id: `wo-${Date.now()}`,
@@ -391,17 +376,15 @@ export const toolImplementations = {
     workOrders.push(newOrder);
     writeJSON("work_orders.json", workOrders);
 
-    console.log(`[create_work_order] Created work order: ${newOrder.id}`);
+    console.log(`[create_work_order] Created: ${newOrder.id}`);
 
-    // Return work order WITHOUT attachments to prevent token overflow in conversation
-    // Attachments are saved in the work order file, but don't need to go back to LLM
     const { attachments: _, ...orderWithoutAttachments } = newOrder;
     return {
       ...orderWithoutAttachments,
       attachments_count: attachments?.length || 0,
       note:
         attachments?.length > 0
-          ? `${attachments.length} photo(s) attached and saved with work order`
+          ? `${attachments.length} photo(s) saved`
           : undefined,
     };
   },
@@ -409,20 +392,16 @@ export const toolImplementations = {
   get_work_orders: ({ tenant_id, status_filter }) => {
     const workOrders = readJSON("work_orders.json") || [];
 
-    // Filter by tenant
     let filtered = workOrders.filter(
       (wo) => (wo.tenant_id || wo.tenantId) === tenant_id
     );
 
-    // Optionally filter by status
     if (status_filter) {
       filtered = filtered.filter(
         (wo) => (wo.status || "").toLowerCase() === status_filter.toLowerCase()
       );
     }
 
-    // Normalize field names for consistency
-    // Strip attachments to prevent token overflow in LLM conversation
     return filtered.map((wo) => ({
       id: wo.id,
       tenant_id: wo.tenant_id || wo.tenantId,
@@ -446,7 +425,6 @@ export const toolImplementations = {
       throw new Error(`Work order ${work_order_id} not found.`);
     }
 
-    // Update only provided fields
     if (issue_summary !== undefined) {
       workOrders[orderIndex].issue_summary = issue_summary;
     }
@@ -461,9 +439,8 @@ export const toolImplementations = {
 
     writeJSON("work_orders.json", workOrders);
 
-    console.log(`[update_work_order] Updated work order: ${work_order_id}`);
+    console.log(`[update_work_order] Updated: ${work_order_id}`);
 
-    // Return without attachments to prevent token overflow
     const { attachments, ...orderWithoutAttachments } = workOrders[orderIndex];
     return {
       ...orderWithoutAttachments,
@@ -489,9 +466,8 @@ export const toolImplementations = {
 
     writeJSON("work_orders.json", workOrders);
 
-    console.log(`[complete_work_order] Completed work order: ${work_order_id}`);
+    console.log(`[complete_work_order] Completed: ${work_order_id}`);
 
-    // Return without attachments to prevent token overflow
     const { attachments, ...orderWithoutAttachments } = workOrders[orderIndex];
     return {
       ...orderWithoutAttachments,
@@ -512,9 +488,8 @@ export const toolImplementations = {
 
     writeJSON("work_orders.json", workOrders);
 
-    console.log(`[delete_work_order] Deleted work order: ${work_order_id}`);
+    console.log(`[delete_work_order] Deleted: ${work_order_id}`);
 
-    // Return without attachments to prevent token overflow
     const { attachments, ...orderWithoutAttachments } = deletedOrder;
     return {
       success: true,
@@ -522,12 +497,11 @@ export const toolImplementations = {
         ...orderWithoutAttachments,
         attachments_count: (attachments || []).length,
       },
-      message: `Work order ${work_order_id} has been deleted.`,
+      message: `Work order ${work_order_id} deleted.`,
     };
   },
 };
 
-// LLM-based semantic comparison of issues
 async function compareIssuesWithLLM(newIssue, existingIssues) {
   const existingIssuesList = existingIssues
     .map(

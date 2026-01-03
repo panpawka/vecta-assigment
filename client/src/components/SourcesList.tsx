@@ -1,3 +1,13 @@
+/**
+ * SourcesList Component
+ *
+ * Displays knowledge base sources cited by the AI agent in a collapsible format.
+ * Shows the articles and guides referenced when providing self-help instructions.
+ *
+ * This component fulfills the RAG (Retrieval-Augmented Generation) citation
+ * requirement, allowing tenants to verify the source of guidance provided.
+ */
+
 import {
   Sources,
   SourcesTrigger,

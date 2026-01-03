@@ -38,8 +38,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// ==================== TYPES ====================
-
 interface Tenant {
   id: string;
   name: string;
@@ -93,8 +91,6 @@ interface SerializedChatMessage {
   attachments?: any[];
 }
 
-// ==================== SESSION STORAGE HELPERS ====================
-
 const getStorageKey = (tenantId: string) => `maintenance-chat-${tenantId}`;
 
 const saveMessagesToSession = (tenantId: string, messages: ChatMessage[]) => {
@@ -126,8 +122,6 @@ const clearMessagesFromSession = (tenantId: string) => {
   sessionStorage.removeItem(getStorageKey(tenantId));
 };
 
-// ==================== SAMPLE MESSAGES ====================
-
 const SAMPLE_ISSUES = [
   "My smoke alarm keeps beeping every 30 seconds",
   "The boiler pressure is showing below 1 bar and heating isn't working",
@@ -138,8 +132,6 @@ const SAMPLE_ISSUES = [
   "The toilet won't stop running",
   "There's a crack appearing in my wall that's getting bigger",
 ];
-
-// ==================== ACTIVE WORK ORDERS COMPONENT ====================
 
 interface ActiveWorkOrdersProps {
   workOrders: WorkOrder[];
@@ -152,7 +144,6 @@ const ActiveWorkOrders = ({
   onMarkAsSolved,
   isLoading,
 }: ActiveWorkOrdersProps) => {
-  // Filter to show only active orders (assigned, pending, in_progress)
   const activeOrders = workOrders.filter(
     (wo) =>
       wo.status === "assigned" ||
@@ -227,8 +218,6 @@ const ActiveWorkOrders = ({
   );
 };
 
-// ==================== COMPONENT ====================
-
 function AppContent() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>("");
@@ -238,7 +227,6 @@ function AppContent() {
   const [isLoadingWorkOrders, setIsLoadingWorkOrders] = useState(false);
   const promptController = usePromptInputController();
 
-  // Create welcome messages for a tenant
   const createWelcomeMessages = useCallback((tenant: Tenant): ChatMessage[] => {
     return [
       {
@@ -256,7 +244,6 @@ function AppContent() {
     ];
   }, []);
 
-  // Fetch work orders for tenant
   const fetchWorkOrders = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
     setIsLoadingWorkOrders(true);
@@ -272,7 +259,6 @@ function AppContent() {
     }
   }, []);
 
-  // Fetch tenants on mount
   useEffect(() => {
     fetch("/api/tenants")
       .then((res) => res.json())
@@ -285,26 +271,21 @@ function AppContent() {
       .catch(console.error);
   }, []);
 
-  // Load messages from session or create welcome messages when tenant changes
   useEffect(() => {
     if (selectedTenantId) {
       const tenant = tenants.find((t) => t.id === selectedTenantId);
       if (tenant) {
-        // Try to load from session storage first
         const storedMessages = loadMessagesFromSession(selectedTenantId);
         if (storedMessages && storedMessages.length > 0) {
           setMessages(storedMessages);
         } else {
-          // Create fresh welcome messages
           setMessages(createWelcomeMessages(tenant));
         }
-        // Fetch work orders for this tenant
         fetchWorkOrders(selectedTenantId);
       }
     }
   }, [selectedTenantId, tenants, createWelcomeMessages, fetchWorkOrders]);
 
-  // Save messages to session storage whenever they change
   useEffect(() => {
     if (selectedTenantId && messages.length > 0) {
       saveMessagesToSession(selectedTenantId, messages);
@@ -386,21 +367,17 @@ function AppContent() {
         for (const result of data.toolResults) {
           const content = JSON.parse(result.content);
           if (result.name === "create_work_order") {
-            // Fetch the full work order from API (with attachments)
-            // The tool result has attachments stripped to save LLM tokens
             try {
               const woResponse = await fetch(
                 `/api/work-orders/${selectedTenantId}`
               );
               const allOrders = await woResponse.json();
-              // Find the work order that was just created by ID
               workOrder =
                 allOrders.find((wo: any) => wo.id === content.id) || content;
             } catch (err) {
               console.error("Failed to fetch full work order:", err);
-              workOrder = content; // Fallback to stripped version
+              workOrder = content;
             }
-            // Refresh work orders list in sidebar
             fetchWorkOrders(selectedTenantId);
           } else if (result.name === "search_knowledge_base") {
             sources = content;
@@ -515,7 +492,6 @@ function AppContent() {
         <Conversation className="flex-1">
           <ConversationContent className="gap-4 px-4 py-6">
             {messages.map((message) => {
-              // System messages - render as centered badge
               if (message.role === "system") {
                 return (
                   <div
@@ -528,12 +504,10 @@ function AppContent() {
 
               const isUser = message.role === "user";
 
-              // User and assistant messages
               return (
                 <Message
                   key={message.id}
                   from={isUser ? "user" : "assistant"}>
-                  {/* Message header with sender name and time */}
                   <div
                     className={cn(
                       "flex items-center gap-2 text-xs text-muted-foreground mb-1",
@@ -557,12 +531,10 @@ function AppContent() {
                       !isUser &&
                         "bg-muted/50 rounded-lg px-4 py-3 group-[.is-assistant]:text-foreground"
                     )}>
-                    {/* Sources - shown before content for assistant */}
                     {message.sources && message.sources.length > 0 && (
                       <SourcesList sources={message.sources} />
                     )}
 
-                    {/* Message attachments */}
                     {message.attachments && message.attachments.length > 0 && (
                       <MessageAttachments>
                         {message.attachments.map((attachment, index) => (
@@ -574,17 +546,14 @@ function AppContent() {
                       </MessageAttachments>
                     )}
 
-                    {/* Main message text */}
                     <MessageResponse>{message.content}</MessageResponse>
 
-                    {/* Tool calls display - DEV ONLY */}
                     {import.meta.env.DEV &&
                       message.toolCalls &&
                       message.toolCalls.length > 0 && (
                         <AgentActions toolCalls={message.toolCalls} />
                       )}
 
-                    {/* Work order card */}
                     {message.workOrder && !message.workOrder.duplicate && (
                       <WorkOrderCard workOrder={message.workOrder} />
                     )}
@@ -593,7 +562,6 @@ function AppContent() {
               );
             })}
 
-            {/* Loading indicator */}
             {isProcessing && (
               <Message from="assistant">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
@@ -610,7 +578,6 @@ function AppContent() {
           <ConversationScrollButton />
         </Conversation>
 
-        {/* Input Area */}
         <div className="border-t bg-background p-4">
           <PromptInput
             onSubmit={handleSubmit}

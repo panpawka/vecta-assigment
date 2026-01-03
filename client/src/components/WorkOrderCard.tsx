@@ -1,3 +1,16 @@
+/**
+ * WorkOrderCard Component
+ *
+ * Displays a comprehensive work order card in the chat interface when a contractor
+ * is booked. Shows all relevant information including priority, contractor details,
+ * scheduled time, and attached photos.
+ *
+ * Features:
+ * - Priority-based color coding for urgency levels
+ * - Photo attachment gallery with modal viewer
+ * - Responsive layout and accessibility support
+ */
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
