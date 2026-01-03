@@ -305,8 +305,7 @@ export function PromptInputAttachment({
             className
           )}
           key={data.id}
-          {...props}
-        >
+          {...props}>
           <div className="relative size-5 shrink-0">
             <div className="absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0">
               {isImage ? (
@@ -331,8 +330,7 @@ export function PromptInputAttachment({
                 attachments.remove(data.id);
               }}
               type="button"
-              variant="ghost"
-            >
+              variant="ghost">
               <XIcon />
               <span className="sr-only">Remove</span>
             </Button>
@@ -393,8 +391,7 @@ export function PromptInputAttachments({
   return (
     <div
       className={cn("flex flex-wrap items-center gap-2 p-3 w-full", className)}
-      {...props}
-    >
+      {...props}>
       {attachments.files.map((file) => (
         <Fragment key={file.id}>{children(file)}</Fragment>
       ))}
@@ -420,10 +417,41 @@ export const PromptInputActionAddAttachments = ({
       onSelect={(e) => {
         e.preventDefault();
         attachments.openFileDialog();
-      }}
-    >
+      }}>
       <ImageIcon className="mr-2 size-4" /> {label}
     </DropdownMenuItem>
+  );
+};
+
+export type PromptInputActionAddAttachmentsButtonProps = ComponentProps<
+  typeof Button
+> & {
+  label?: string;
+};
+
+export const PromptInputActionAddAttachmentsButton = ({
+  variant = "ghost",
+  size = "icon",
+  label,
+  ...props
+}: PromptInputActionAddAttachmentsButtonProps) => {
+  const attachments = usePromptInputAttachments();
+
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      onClick={(e) => {
+        e.stopPropagation();
+        attachments.openFileDialog();
+      }}
+      {...props}>
+      <div className="flex items-center gap-2 text-sm">
+        <ImageIcon className="size-4" />
+        {label && <span>{label}</span>}
+      </div>
+    </Button>
   );
 };
 
@@ -611,7 +639,7 @@ export const PromptInput = ({
   useEffect(() => {
     const form = formRef.current;
     if (!form) return;
-    if (globalDrop) return // when global drop is on, let the document-level handler own drops
+    if (globalDrop) return; // when global drop is on, let the document-level handler own drops
 
     const onDragOver = (e: DragEvent) => {
       if (e.dataTransfer?.types?.includes("Files")) {
@@ -787,8 +815,7 @@ export const PromptInput = ({
         className={cn("w-full", className)}
         onSubmit={handleSubmit}
         ref={formRef}
-        {...props}
-      >
+        {...props}>
         <InputGroup className="overflow-hidden">{children}</InputGroup>
       </form>
     </>
@@ -809,7 +836,10 @@ export const PromptInputBody = ({
   className,
   ...props
 }: PromptInputBodyProps) => (
-  <div className={cn("contents", className)} {...props} />
+  <div
+    className={cn("contents", className)}
+    {...props}
+  />
 );
 
 export type PromptInputTextareaProps = ComponentProps<
@@ -951,7 +981,10 @@ export const PromptInputTools = ({
   className,
   ...props
 }: PromptInputToolsProps) => (
-  <div className={cn("flex items-center gap-1", className)} {...props} />
+  <div
+    className={cn("flex items-center gap-1", className)}
+    {...props}
+  />
 );
 
 export type PromptInputButtonProps = ComponentProps<typeof InputGroupButton>;
@@ -989,7 +1022,9 @@ export const PromptInputActionMenuTrigger = ({
   ...props
 }: PromptInputActionMenuTriggerProps) => (
   <DropdownMenuTrigger asChild>
-    <PromptInputButton className={className} {...props}>
+    <PromptInputButton
+      className={className}
+      {...props}>
       {children ?? <PlusIcon className="size-4" />}
     </PromptInputButton>
   </DropdownMenuTrigger>
@@ -1002,7 +1037,11 @@ export const PromptInputActionMenuContent = ({
   className,
   ...props
 }: PromptInputActionMenuContentProps) => (
-  <DropdownMenuContent align="start" className={cn(className)} {...props} />
+  <DropdownMenuContent
+    align="start"
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputActionMenuItemProps = ComponentProps<
@@ -1012,7 +1051,10 @@ export const PromptInputActionMenuItem = ({
   className,
   ...props
 }: PromptInputActionMenuItemProps) => (
-  <DropdownMenuItem className={cn(className)} {...props} />
+  <DropdownMenuItem
+    className={cn(className)}
+    {...props}
+  />
 );
 
 // Note: Actions that perform side-effects (like opening a file dialog)
@@ -1047,8 +1089,7 @@ export const PromptInputSubmit = ({
       size={size}
       type="submit"
       variant={variant}
-      {...props}
-    >
+      {...props}>
       {children ?? Icon}
     </InputGroupButton>
   );
@@ -1207,8 +1248,7 @@ export const PromptInputSpeechButton = ({
       )}
       disabled={!recognition}
       onClick={toggleListening}
-      {...props}
-    >
+      {...props}>
       <MicIcon className="size-4" />
     </PromptInputButton>
   );
@@ -1246,7 +1286,10 @@ export const PromptInputSelectContent = ({
   className,
   ...props
 }: PromptInputSelectContentProps) => (
-  <SelectContent className={cn(className)} {...props} />
+  <SelectContent
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputSelectItemProps = ComponentProps<typeof SelectItem>;
@@ -1255,7 +1298,10 @@ export const PromptInputSelectItem = ({
   className,
   ...props
 }: PromptInputSelectItemProps) => (
-  <SelectItem className={cn(className)} {...props} />
+  <SelectItem
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputSelectValueProps = ComponentProps<typeof SelectValue>;
@@ -1264,7 +1310,10 @@ export const PromptInputSelectValue = ({
   className,
   ...props
 }: PromptInputSelectValueProps) => (
-  <SelectValue className={cn(className)} {...props} />
+  <SelectValue
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputHoverCardProps = ComponentProps<typeof HoverCard>;
@@ -1274,7 +1323,11 @@ export const PromptInputHoverCard = ({
   closeDelay = 0,
   ...props
 }: PromptInputHoverCardProps) => (
-  <HoverCard closeDelay={closeDelay} openDelay={openDelay} {...props} />
+  <HoverCard
+    closeDelay={closeDelay}
+    openDelay={openDelay}
+    {...props}
+  />
 );
 
 export type PromptInputHoverCardTriggerProps = ComponentProps<
@@ -1293,7 +1346,10 @@ export const PromptInputHoverCardContent = ({
   align = "start",
   ...props
 }: PromptInputHoverCardContentProps) => (
-  <HoverCardContent align={align} {...props} />
+  <HoverCardContent
+    align={align}
+    {...props}
+  />
 );
 
 export type PromptInputTabsListProps = HTMLAttributes<HTMLDivElement>;
@@ -1301,14 +1357,24 @@ export type PromptInputTabsListProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputTabsList = ({
   className,
   ...props
-}: PromptInputTabsListProps) => <div className={cn(className)} {...props} />;
+}: PromptInputTabsListProps) => (
+  <div
+    className={cn(className)}
+    {...props}
+  />
+);
 
 export type PromptInputTabProps = HTMLAttributes<HTMLDivElement>;
 
 export const PromptInputTab = ({
   className,
   ...props
-}: PromptInputTabProps) => <div className={cn(className)} {...props} />;
+}: PromptInputTabProps) => (
+  <div
+    className={cn(className)}
+    {...props}
+  />
+);
 
 export type PromptInputTabLabelProps = HTMLAttributes<HTMLHeadingElement>;
 
@@ -1331,7 +1397,10 @@ export const PromptInputTabBody = ({
   className,
   ...props
 }: PromptInputTabBodyProps) => (
-  <div className={cn("space-y-1", className)} {...props} />
+  <div
+    className={cn("space-y-1", className)}
+    {...props}
+  />
 );
 
 export type PromptInputTabItemProps = HTMLAttributes<HTMLDivElement>;
@@ -1354,7 +1423,12 @@ export type PromptInputCommandProps = ComponentProps<typeof Command>;
 export const PromptInputCommand = ({
   className,
   ...props
-}: PromptInputCommandProps) => <Command className={cn(className)} {...props} />;
+}: PromptInputCommandProps) => (
+  <Command
+    className={cn(className)}
+    {...props}
+  />
+);
 
 export type PromptInputCommandInputProps = ComponentProps<typeof CommandInput>;
 
@@ -1362,7 +1436,10 @@ export const PromptInputCommandInput = ({
   className,
   ...props
 }: PromptInputCommandInputProps) => (
-  <CommandInput className={cn(className)} {...props} />
+  <CommandInput
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputCommandListProps = ComponentProps<typeof CommandList>;
@@ -1371,7 +1448,10 @@ export const PromptInputCommandList = ({
   className,
   ...props
 }: PromptInputCommandListProps) => (
-  <CommandList className={cn(className)} {...props} />
+  <CommandList
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputCommandEmptyProps = ComponentProps<typeof CommandEmpty>;
@@ -1380,7 +1460,10 @@ export const PromptInputCommandEmpty = ({
   className,
   ...props
 }: PromptInputCommandEmptyProps) => (
-  <CommandEmpty className={cn(className)} {...props} />
+  <CommandEmpty
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputCommandGroupProps = ComponentProps<typeof CommandGroup>;
@@ -1389,7 +1472,10 @@ export const PromptInputCommandGroup = ({
   className,
   ...props
 }: PromptInputCommandGroupProps) => (
-  <CommandGroup className={cn(className)} {...props} />
+  <CommandGroup
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputCommandItemProps = ComponentProps<typeof CommandItem>;
@@ -1398,7 +1484,10 @@ export const PromptInputCommandItem = ({
   className,
   ...props
 }: PromptInputCommandItemProps) => (
-  <CommandItem className={cn(className)} {...props} />
+  <CommandItem
+    className={cn(className)}
+    {...props}
+  />
 );
 
 export type PromptInputCommandSeparatorProps = ComponentProps<
@@ -1409,5 +1498,8 @@ export const PromptInputCommandSeparator = ({
   className,
   ...props
 }: PromptInputCommandSeparatorProps) => (
-  <CommandSeparator className={cn(className)} {...props} />
+  <CommandSeparator
+    className={cn(className)}
+    {...props}
+  />
 );

@@ -6,6 +6,8 @@ import {
 } from "@/components/ai-elements/conversation";
 import {
   Message,
+  MessageAttachment,
+  MessageAttachments,
   MessageContent,
   MessageResponse,
 } from "@/components/ai-elements/message";
@@ -16,6 +18,11 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
+  PromptInputAttachments,
+  PromptInputAttachment,
+  PromptInputProvider,
+  usePromptInputController,
+  PromptInputActionAddAttachmentsButton,
 } from "@/components/ai-elements/prompt-input";
 import { WorkOrderCard } from "./components/WorkOrderCard";
 import { SourcesList } from "./components/SourcesList";
@@ -23,6 +30,13 @@ import { AgentActions } from "./components/AgentActions";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { cn } from "@/lib/utils";
 import { Trash2Icon, CheckCircleIcon, ClipboardListIcon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // ==================== TYPES ====================
 
@@ -50,6 +64,7 @@ interface ChatMessage {
   workOrder?: any;
   sources?: any[];
   toolCalls?: any[];
+  attachments?: any[];
 }
 
 interface WorkOrder {
@@ -75,6 +90,7 @@ interface SerializedChatMessage {
   workOrder?: any;
   sources?: any[];
   toolCalls?: any[];
+  attachments?: any[];
 }
 
 // ==================== SESSION STORAGE HELPERS ====================
@@ -213,14 +229,14 @@ const ActiveWorkOrders = ({
 
 // ==================== COMPONENT ====================
 
-function App() {
+function AppContent() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputValue, setInputValue] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [isLoadingWorkOrders, setIsLoadingWorkOrders] = useState(false);
+  const promptController = usePromptInputController();
 
   // Create welcome messages for a tenant
   const createWelcomeMessages = useCallback((tenant: Tenant): ChatMessage[] => {
@@ -322,18 +338,18 @@ function App() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isProcessing) return;
+  const handleSendMessage = async (text: string, attachments: any[] = []) => {
+    if (!text.trim() || isProcessing) return;
 
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
-      content: inputValue.trim(),
+      content: text.trim(),
       timestamp: new Date(),
+      attachments: attachments.length > 0 ? attachments : undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
     setIsProcessing(true);
 
     try {
@@ -348,6 +364,12 @@ function App() {
         body: JSON.stringify({
           messages: apiMessages,
           tenantId: selectedTenantId,
+          attachments: attachments.map((file) => ({
+            id: `att-${Date.now()}-${Math.random()}`,
+            url: file.url,
+            filename: file.filename,
+            mediaType: file.mediaType,
+          })),
         }),
       });
 
@@ -364,8 +386,21 @@ function App() {
         for (const result of data.toolResults) {
           const content = JSON.parse(result.content);
           if (result.name === "create_work_order") {
-            workOrder = content;
-            // Refresh work orders after creation
+            // Fetch the full work order from API (with attachments)
+            // The tool result has attachments stripped to save LLM tokens
+            try {
+              const woResponse = await fetch(
+                `/api/work-orders/${selectedTenantId}`
+              );
+              const allOrders = await woResponse.json();
+              // Find the work order that was just created by ID
+              workOrder =
+                allOrders.find((wo: any) => wo.id === content.id) || content;
+            } catch (err) {
+              console.error("Failed to fetch full work order:", err);
+              workOrder = content; // Fallback to stripped version
+            }
+            // Refresh work orders list in sidebar
             fetchWorkOrders(selectedTenantId);
           } else if (result.name === "search_knowledge_base") {
             sources = content;
@@ -398,12 +433,12 @@ function App() {
     }
   };
 
-  const handleSubmit = () => {
-    handleSendMessage();
+  const handleSubmit = (message: { text: string; files: any[] }) => {
+    handleSendMessage(message.text, message.files);
   };
 
   const handleSampleClick = (sample: string) => {
-    setInputValue(sample);
+    promptController.textInput.setInput(sample);
   };
 
   return (
@@ -417,17 +452,22 @@ function App() {
 
         <div className="tenant-selector">
           <label>Active Tenant</label>
-          <select
+          <Select
             value={selectedTenantId}
-            onChange={(e) => setSelectedTenantId(e.target.value)}>
-            {tenants.map((tenant) => (
-              <option
-                key={tenant.id}
-                value={tenant.id}>
-                {tenant.name}
-              </option>
-            ))}
-          </select>
+            onValueChange={setSelectedTenantId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select tenant" />
+            </SelectTrigger>
+            <SelectContent>
+              {tenants.map((tenant) => (
+                <SelectItem
+                  key={tenant.id}
+                  value={tenant.id}>
+                  {tenant.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {selectedTenant && (
             <div className="tenant-info">
               <p>{selectedTenant.unit}</p>
@@ -522,6 +562,18 @@ function App() {
                       <SourcesList sources={message.sources} />
                     )}
 
+                    {/* Message attachments */}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <MessageAttachments>
+                        {message.attachments.map((attachment, index) => (
+                          <MessageAttachment
+                            key={`${attachment.id}-${index}`}
+                            data={attachment}
+                          />
+                        ))}
+                      </MessageAttachments>
+                    )}
+
                     {/* Main message text */}
                     <MessageResponse>{message.content}</MessageResponse>
 
@@ -562,29 +614,48 @@ function App() {
         <div className="border-t bg-background p-4">
           <PromptInput
             onSubmit={handleSubmit}
+            accept="image/*"
+            multiple={true}
             className="max-w-none">
             <PromptInputBody>
+              <PromptInputAttachments>
+                {(attachment) => (
+                  <PromptInputAttachment
+                    key={attachment.id}
+                    data={attachment}
+                  />
+                )}
+              </PromptInputAttachments>
               <PromptInputTextarea
-                placeholder="Describe your maintenance issue..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Describe your maintenance issue (you can attach photos)..."
                 disabled={isProcessing}
               />
             </PromptInputBody>
             <PromptInputFooter>
-              <PromptInputTools />
+              <PromptInputTools>
+                <PromptInputActionAddAttachmentsButton variant="ghost" />
+              </PromptInputTools>
               <PromptInputSubmit
-                disabled={!inputValue.trim() || isProcessing}
+                disabled={isProcessing}
                 status={isProcessing ? "streaming" : "ready"}
               />
             </PromptInputFooter>
           </PromptInput>
           <p className="text-center text-xs text-muted-foreground mt-2">
-            Press Enter to send, Shift+Enter for new line
+            Press Enter to send, Shift+Enter for new line • Drag & drop or paste
+            images
           </p>
         </div>
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <PromptInputProvider>
+      <AppContent />
+    </PromptInputProvider>
   );
 }
 

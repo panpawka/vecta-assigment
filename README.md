@@ -85,7 +85,7 @@ npm run install:all
 npm run dev
 ```
 
-- **API**: http://localhost:3002
+- **API**: http://localhost:3001
 - **Frontend**: http://localhost:5173
 
 ## What You Can Use

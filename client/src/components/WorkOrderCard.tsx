@@ -5,8 +5,17 @@ import {
   UserIcon,
   CalendarIcon,
   WrenchIcon,
+  ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+interface WorkOrderAttachment {
+  id: string;
+  url: string;
+  filename: string;
+  mediaType: string;
+}
 
 interface WorkOrder {
   id: string;
@@ -20,6 +29,7 @@ interface WorkOrder {
   priority: string;
   issue_summary: string;
   status: string;
+  attachments?: WorkOrderAttachment[];
 }
 
 interface WorkOrderCardProps {
@@ -41,9 +51,13 @@ const priorityVariants: Record<
 };
 
 export const WorkOrderCard = ({ workOrder }: WorkOrderCardProps) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const priorityConfig =
     priorityVariants[workOrder.priority.toLowerCase()] ||
     priorityVariants.standard;
+
+  const hasAttachments =
+    workOrder.attachments && workOrder.attachments.length > 0;
 
   return (
     <Card className="mt-3 border-primary/20 bg-primary/5">
@@ -116,8 +130,76 @@ export const WorkOrderCard = ({ workOrder }: WorkOrderCardProps) => {
               {workOrder.status}
             </Badge>
           </div>
+
+          {/* Photo Attachments */}
+          {hasAttachments && (
+            <div className="mt-2 pt-2 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <ImageIcon className="size-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground text-xs">
+                  Attached Photos ({workOrder.attachments!.length})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {workOrder.attachments!.map((attachment) => (
+                  <button
+                    key={attachment.id}
+                    onClick={() => setSelectedImage(attachment.url)}
+                    className="relative w-20 h-20 rounded-md overflow-hidden border border-border hover:border-primary transition-colors cursor-pointer group">
+                    <img
+                      src={attachment.url}
+                      alt={attachment.filename}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}>
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <img
+              src={selectedImage}
+              alt="Full size"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round">
+                <line
+                  x1="18"
+                  y1="6"
+                  x2="6"
+                  y2="18"></line>
+                <line
+                  x1="6"
+                  y1="6"
+                  x2="18"
+                  y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 };
